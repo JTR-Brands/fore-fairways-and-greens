@@ -2,7 +2,6 @@ package com.fore.game.domain.model;
 
 import com.fore.common.types.Money;
 import com.fore.game.domain.model.enums.Difficulty;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -28,27 +27,66 @@ public class PlayerState {
     private int turnsInSandTrap;
     private int consecutiveDoubles;
 
-    @Builder
-    public PlayerState(
-            UUID playerId,
-            String displayName,
-            boolean npc,
-            Difficulty npcDifficulty,
-            Money startingCurrency) {
-        this.playerId = playerId;
-        this.displayName = displayName;
-        this.npc = npc;
-        this.npcDifficulty = npc ? (npcDifficulty != null ? npcDifficulty : Difficulty.MEDIUM) : null;
+    private PlayerState(Builder builder) {
+        this.playerId = builder.playerId;
+        this.displayName = builder.displayName;
+        this.npc = builder.npc;
+        this.npcDifficulty = builder.npc ? (builder.npcDifficulty != null ? builder.npcDifficulty : Difficulty.MEDIUM) : null;
         this.position = 0;
-        this.currency = startingCurrency;
+        this.currency = builder.startingCurrency;
         this.ownedPropertyIds = new HashSet<>();
         this.bankrupt = false;
         this.turnsInSandTrap = 0;
         this.consecutiveDoubles = 0;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private UUID playerId;
+        private String displayName;
+        private boolean npc;
+        private Difficulty npcDifficulty;
+        private Money startingCurrency;
+
+        public Builder playerId(UUID playerId) {
+            this.playerId = playerId;
+            return this;
+        }
+
+        public Builder displayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        public Builder npc(boolean npc) {
+            this.npc = npc;
+            return this;
+        }
+
+        public Builder npcDifficulty(Difficulty npcDifficulty) {
+            this.npcDifficulty = npcDifficulty;
+            return this;
+        }
+
+        public Builder startingCurrency(Money startingCurrency) {
+            this.startingCurrency = startingCurrency;
+            return this;
+        }
+
+        public PlayerState build() {
+            return new PlayerState(this);
+        }
+    }
+
     public void moveTo(int newPosition) {
         this.position = newPosition;
+    }
+
+    public void setCurrency(Money amount) {
+        this.currency = amount;
     }
 
     public void addCurrency(Money amount) {
@@ -108,12 +146,20 @@ public class PlayerState {
         return turnsInSandTrap > 0;
     }
 
+    public void setTurnsInSandTrap(int turns) {
+        this.turnsInSandTrap = turns;
+    }
+
     public void incrementConsecutiveDoubles() {
         this.consecutiveDoubles++;
     }
 
     public void resetConsecutiveDoubles() {
         this.consecutiveDoubles = 0;
+    }
+
+    public void setConsecutiveDoubles(int count) {
+        this.consecutiveDoubles = count;
     }
 
     public boolean hasRolledThreeDoubles() {
