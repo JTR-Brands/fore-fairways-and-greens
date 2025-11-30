@@ -4,6 +4,8 @@ plugins {
     id("io.spring.dependency-management")
 }
 
+val flywayVersion = "9.22.3"  // Version aligned with Spring Boot 3.2.x
+
 dependencies {
     implementation(project(":fore-common"))
 
@@ -16,8 +18,9 @@ dependencies {
 
     // Database
     implementation("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
+
+    // Flyway - use consistent versions
+    implementation("org.flywaydb:flyway-core:${flywayVersion}")
 
     // JSON / JSONB support
     implementation("com.fasterxml.jackson.core:jackson-databind")
