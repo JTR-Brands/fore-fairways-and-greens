@@ -1,0 +1,51 @@
+# ===== Java / Gradle =====
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# ===== IDE =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# ===== Node =====
+node_modules/
+dist/
+.npm
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Environment =====
+.env
+.env.local
+.env.*.local
+*.local.yml
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Testing =====
+coverage/
+*.lcov
+
+# ===== Docker =====
+docker/data/
+
+# ===== Misc =====
+*.bak
+*.tmp

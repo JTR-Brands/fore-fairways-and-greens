@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: fore-ai-agent
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+llm:
+  provider: ${LLM_PROVIDER:mock}
+  api-key: ${LLM_API_KEY:}
+  model: ${LLM_MODEL:claude-sonnet-4-20250514}
+  timeout-seconds: 60
+  max-retries: 3
+
+logging:
+  level:
+    com.fore: DEBUG
