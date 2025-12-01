@@ -50,6 +50,33 @@ public class GameSession {
         this.lastActivityAt = Instant.now();
     }
 
+    /**
+     * Private constructor for reconstitution.
+     */
+    private GameSession(
+            UUID gameId,
+            GameStatus status,
+            UUID currentPlayerId,
+            TurnPhase turnPhase,
+            int turnNumber,
+            UUID winnerId,
+            Board board,
+            Map<UUID, PlayerState> players,
+            Instant createdAt,
+            Instant updatedAt) {
+        this.gameId = gameId;
+        this.status = status;
+        this.currentPlayerId = currentPlayerId;
+        this.turnPhase = turnPhase;
+        this.turnNumber = turnNumber;
+        this.winnerId = winnerId;
+        this.board = board;
+        this.players = new LinkedHashMap<>(players);
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.lastActivityAt = updatedAt;
+    }
+
     // ==================== Factory Methods ====================
 
     public static GameSession create(UUID creatorId, String creatorName, boolean vsNpc, Difficulty npcDifficulty) {
@@ -69,11 +96,12 @@ public class GameSession {
         // If vs NPC, add NPC player immediately
         if (vsNpc) {
             UUID npcId = UUID.randomUUID();
+            Difficulty difficulty = npcDifficulty != null ? npcDifficulty : Difficulty.MEDIUM;
             PlayerState npc = PlayerState.builder()
                     .playerId(npcId)
-                    .displayName(npcDifficulty.getDisplayName())
+                    .displayName(difficulty.getDisplayName())
                     .npc(true)
-                    .npcDifficulty(npcDifficulty)
+                    .npcDifficulty(difficulty)
                     .startingCurrency(GameConstants.STARTING_CURRENCY)
                     .build();
             session.players.put(npcId, npc);
@@ -101,17 +129,18 @@ public class GameSession {
             Instant createdAt,
             Instant updatedAt) {
 
-        GameSession session = new GameSession(gameId, board);
-        session.status = status;
-        session.currentPlayerId = currentPlayerId;
-        session.turnPhase = turnPhase;
-        session.turnNumber = turnNumber;
-        session.winnerId = winnerId;
-        session.players.putAll(players);
-        session.createdAt = createdAt;
-        session.updatedAt = updatedAt;
-        session.lastActivityAt = updatedAt;
-        return session;
+        return new GameSession(
+                gameId,
+                status,
+                currentPlayerId,
+                turnPhase,
+                turnNumber,
+                winnerId,
+                board,
+                players,
+                createdAt,
+                updatedAt
+        );
     }
 
     // ==================== Commands ====================
@@ -311,8 +340,10 @@ public class GameSession {
 
     public void endTurn(UUID playerId) {
         validatePlayerTurn(playerId);
-        if (turnPhase != TurnPhase.ACTION && turnPhase != TurnPhase.ROLL) {
-            throw new IllegalStateException("Cannot end turn in phase: " + turnPhase);
+        
+        // Can only end turn from ACTION phase
+        if (turnPhase != TurnPhase.ACTION) {
+            throw new IllegalStateException("Can only end turn from ACTION phase, current phase: " + turnPhase);
         }
 
         // Cancel any pending trade
@@ -501,7 +532,8 @@ public class GameSession {
 
         // Transfer remaining currency
         creditor.addCurrency(bankruptPlayer.getCurrency());
-        bankruptPlayer.subtractCurrency(bankruptPlayer.getCurrency());
+        // Set bankrupt player currency to zero
+        bankruptPlayer.setCurrency(Money.zero());
 
         addEvent(PlayerBankruptEvent.builder()
                 .gameId(gameId)
@@ -646,6 +678,9 @@ public class GameSession {
     }
 
     public PlayerState getCurrentPlayer() {
+        if (currentPlayerId == null) {
+            return null;
+        }
         return getPlayer(currentPlayerId);
     }
 

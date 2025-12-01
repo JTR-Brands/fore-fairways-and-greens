@@ -4,7 +4,7 @@ plugins {
     id("io.spring.dependency-management")
 }
 
-val flywayVersion = "9.22.3"  // Version aligned with Spring Boot 3.2.x
+val flywayVersion = "9.22.3"
 
 dependencies {
     implementation(project(":fore-common"))
@@ -18,8 +18,6 @@ dependencies {
 
     // Database
     implementation("org.postgresql:postgresql")
-
-    // Flyway - use consistent versions
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
 
     // JSON / JSONB support
@@ -37,6 +35,10 @@ dependencies {
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
