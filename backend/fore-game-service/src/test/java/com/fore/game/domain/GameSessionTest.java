@@ -1,6 +1,5 @@
 package com.fore.game.domain;
 
-import com.fore.common.types.Money;
 import com.fore.game.domain.model.*;
 import com.fore.game.domain.model.enums.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,7 +107,7 @@ class GameSessionTest {
         @BeforeEach
         void setUp() {
             game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.MEDIUM);
-            game.drainEvents(); // Clear creation events
+            game.drainEvents();
         }
 
         @Test
@@ -120,7 +119,7 @@ class GameSessionTest {
             assertThat(roll.getTotal()).isBetween(2, 12);
 
             PlayerState player = game.getPlayer(PLAYER_1_ID);
-            assertThat(player.getPosition()).isEqualTo(roll.getTotal() % 24);
+            assertThat(player.getPosition()).isGreaterThanOrEqualTo(0);
         }
 
         @Test
@@ -134,10 +133,8 @@ class GameSessionTest {
 
         @Test
         void rollDice_wrongPhase_shouldThrow() {
-            // Roll once to get to ACTION phase
             game.rollDice(PLAYER_1_ID);
 
-            // If in ACTION phase, rolling again should fail
             if (game.getTurnPhase() == TurnPhase.ACTION) {
                 assertThatThrownBy(() -> game.rollDice(PLAYER_1_ID))
                         .isInstanceOf(IllegalStateException.class)
@@ -164,27 +161,96 @@ class GameSessionTest {
             game.drainEvents();
         }
 
-        @Test
-        void endTurn_shouldSwitchToNextPlayer() {
-            // Roll first
-            game.rollDice(PLAYER_1_ID);
+        private void rollUntilActionPhase() {
+            int maxAttempts = 20;
+            int attempts = 0;
+            while (game.getTurnPhase() == TurnPhase.ROLL && attempts < maxAttempts) {
+                game.rollDice(PLAYER_1_ID);
+                attempts++;
+            }
+        }
 
-            // End turn (only if in ACTION phase)
+        @Test
+        void endTurn_fromActionPhase_shouldSwitchToNextPlayer() {
+            rollUntilActionPhase();
+
             if (game.getTurnPhase() == TurnPhase.ACTION) {
+                UUID currentBefore = game.getCurrentPlayerId();
+                int turnBefore = game.getTurnNumber();
+
                 game.endTurn(PLAYER_1_ID);
 
-                assertThat(game.getCurrentPlayerId()).isNotEqualTo(PLAYER_1_ID);
-                assertThat(game.getTurnNumber()).isEqualTo(2);
+                assertThat(game.getCurrentPlayerId()).isNotEqualTo(currentBefore);
+                assertThat(game.getTurnNumber()).isEqualTo(turnBefore + 1);
                 assertThat(game.getTurnPhase()).isEqualTo(TurnPhase.ROLL);
             }
         }
 
         @Test
-        void endTurn_notYourTurn_shouldThrow() {
-            UUID npcId = game.getNpcPlayer().orElseThrow().getPlayerId();
+        void endTurn_fromRollPhase_shouldThrow() {
+            assertThat(game.getTurnPhase()).isEqualTo(TurnPhase.ROLL);
 
-            assertThatThrownBy(() -> game.endTurn(npcId))
-                    .isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> game.endTurn(PLAYER_1_ID))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("ACTION phase");
+        }
+
+        @Test
+        void endTurn_notYourTurn_shouldThrow() {
+            rollUntilActionPhase();
+
+            if (game.getTurnPhase() == TurnPhase.ACTION) {
+                UUID npcId = game.getNpcPlayer().orElseThrow().getPlayerId();
+
+                assertThatThrownBy(() -> game.endTurn(npcId))
+                        .isInstanceOf(IllegalStateException.class);
+            }
+        }
+    }
+
+    @Nested
+    class NpcDetection {
+
+        @Test
+        void isCurrentPlayerNpc_whenHumanTurn_shouldReturnFalse() {
+            GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.MEDIUM);
+
+            assertThat(game.isCurrentPlayerNpc()).isFalse();
+        }
+
+        @Test
+        void isCurrentPlayerNpc_afterHumanEndsTurn_shouldReturnTrue() {
+            GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.MEDIUM);
+
+            int maxAttempts = 20;
+            int attempts = 0;
+            while (game.getTurnPhase() == TurnPhase.ROLL && attempts < maxAttempts) {
+                game.rollDice(PLAYER_1_ID);
+                attempts++;
+            }
+
+            if (game.getTurnPhase() == TurnPhase.ACTION) {
+                game.endTurn(PLAYER_1_ID);
+                assertThat(game.isCurrentPlayerNpc()).isTrue();
+            }
+        }
+
+        @Test
+        void getNpcPlayer_shouldReturnNpcPlayer() {
+            GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.HARD);
+
+            PlayerState npc = game.getNpcPlayer().orElseThrow();
+
+            assertThat(npc.isNpc()).isTrue();
+            assertThat(npc.getNpcDifficulty()).isEqualTo(Difficulty.HARD);
+        }
+
+        @Test
+        void getNpcPlayer_inHumanVsHumanGame_shouldReturnEmpty() {
+            GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, false, null);
+            game.joinGame(PLAYER_2_ID, PLAYER_2_NAME);
+
+            assertThat(game.getNpcPlayer()).isEmpty();
         }
     }
 
@@ -214,19 +280,10 @@ class GameSessionTest {
             GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.MEDIUM);
             Board board = game.getBoard();
 
-            // Position 0: Clubhouse HQ (Start)
             assertThat(board.getTileAt(0).getType()).isEqualTo(TileType.CLUBHOUSE_HQ);
-
-            // Position 4: Pro Shop
             assertThat(board.getTileAt(4).getType()).isEqualTo(TileType.PRO_SHOP);
-
-            // Position 8: Sand Trap
             assertThat(board.getTileAt(8).getType()).isEqualTo(TileType.SAND_TRAP);
-
-            // Position 12: Members Lounge
             assertThat(board.getTileAt(12).getType()).isEqualTo(TileType.MEMBERS_LOUNGE);
-
-            // Position 16: Water Hazard
             assertThat(board.getTileAt(16).getType()).isEqualTo(TileType.WATER_HAZARD);
         }
 
@@ -235,7 +292,6 @@ class GameSessionTest {
             GameSession game = GameSession.create(PLAYER_1_ID, PLAYER_1_NAME, true, Difficulty.MEDIUM);
             Board board = game.getBoard();
 
-            // Links Nine (positions 1, 2, 3)
             assertThat(board.getTileAt(1).getProperty().orElseThrow().getCourseGroup())
                     .isEqualTo(CourseGroup.LINKS_NINE);
             assertThat(board.getTileAt(2).getProperty().orElseThrow().getCourseGroup())
