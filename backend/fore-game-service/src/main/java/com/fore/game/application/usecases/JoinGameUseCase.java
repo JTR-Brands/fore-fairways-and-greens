@@ -1,5 +1,7 @@
 package com.fore.game.application.usecases;
 
+import com.fore.game.api.websocket.GameEventPublisher;
+import com.fore.game.api.websocket.dto.GameUpdateMessage.UpdateType;
 import com.fore.game.application.dto.GameStateResponse;
 import com.fore.game.application.dto.GameStateDtoMapper;
 import com.fore.game.application.dto.JoinGameRequest;
@@ -26,6 +28,7 @@ public class JoinGameUseCase {
     private final GameRepository gameRepository;
     private final GameEventRepository eventRepository;
     private final GameStateDtoMapper dtoMapper;
+    private final GameEventPublisher eventPublisher;
 
     @Transactional
     public GameStateResponse execute(UUID gameId, JoinGameRequest request) {
@@ -52,6 +55,26 @@ public class JoinGameUseCase {
         log.info("Player {} joined game {}. Game status: {}", 
                 request.getPlayerId(), gameId, savedGame.getStatus());
 
-        return dtoMapper.toGameStateResponse(savedGame);
+        GameStateResponse response = dtoMapper.toGameStateResponse(savedGame);
+
+        // Publish WebSocket events
+        eventPublisher.publishGameState(
+                gameId,
+                request.getPlayerId(),
+                UpdateType.PLAYER_JOINED,
+                response
+        );
+
+        // If game started, also publish game started event
+        if (savedGame.getStatus() == GameStatus.IN_PROGRESS) {
+            eventPublisher.publishGameState(
+                    gameId,
+                    request.getPlayerId(),
+                    UpdateType.GAME_STARTED,
+                    response
+            );
+        }
+
+        return response;
     }
 }

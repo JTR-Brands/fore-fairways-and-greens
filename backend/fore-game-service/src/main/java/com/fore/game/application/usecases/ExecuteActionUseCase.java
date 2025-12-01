@@ -1,6 +1,8 @@
 package com.fore.game.application.usecases;
 
 import com.fore.common.types.Money;
+import com.fore.game.api.websocket.GameEventPublisher;
+import com.fore.game.api.websocket.dto.GameUpdateMessage.UpdateType;
 import com.fore.game.application.dto.ActionResultResponse;
 import com.fore.game.application.dto.GameStateDtoMapper;
 import com.fore.game.application.dto.PlayerActionRequest;
@@ -13,6 +15,7 @@ import com.fore.game.domain.exceptions.InvalidActionException;
 import com.fore.game.domain.model.DiceRoll;
 import com.fore.game.domain.model.GameSession;
 import com.fore.game.domain.model.TradeOffer;
+import com.fore.game.domain.model.enums.GameStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class ExecuteActionUseCase {
     private final GameRepository gameRepository;
     private final GameEventRepository eventRepository;
     private final GameStateDtoMapper dtoMapper;
+    private final GameEventPublisher eventPublisher;
 
     @Transactional
     public ActionResultResponse execute(UUID gameId, PlayerActionRequest request) {
@@ -68,7 +72,13 @@ public class ExecuteActionUseCase {
             responseBuilder.diceRoll(dtoMapper.toDiceRollDto(diceRoll));
         }
 
-        return responseBuilder.build();
+        ActionResultResponse response = responseBuilder.build();
+
+        // Publish WebSocket event
+        UpdateType updateType = mapActionToUpdateType(request.getActionType(), savedGame);
+        eventPublisher.publishActionResult(gameId, request.getPlayerId(), updateType, response);
+
+        return response;
     }
 
     private DiceRoll executeAction(GameSession game, PlayerActionRequest request) {
@@ -134,5 +144,22 @@ public class ExecuteActionUseCase {
                 .requestedCurrency(Money.ofCents(request.getRequestedCurrencyCents()))
                 .status(TradeOffer.TradeStatus.PENDING)
                 .build();
+    }
+
+    private UpdateType mapActionToUpdateType(ActionType actionType, GameSession game) {
+        // Check for game end
+        if (game.getStatus() == GameStatus.COMPLETED) {
+            return UpdateType.GAME_ENDED;
+        }
+
+        return switch (actionType) {
+            case ROLL_DICE -> UpdateType.DICE_ROLLED;
+            case PURCHASE_PROPERTY -> UpdateType.PROPERTY_PURCHASED;
+            case IMPROVE_PROPERTY -> UpdateType.PROPERTY_IMPROVED;
+            case PROPOSE_TRADE -> UpdateType.TRADE_PROPOSED;
+            case ACCEPT_TRADE -> UpdateType.TRADE_ACCEPTED;
+            case REJECT_TRADE -> UpdateType.TRADE_REJECTED;
+            case END_TURN -> UpdateType.TURN_ENDED;
+        };
     }
 }
