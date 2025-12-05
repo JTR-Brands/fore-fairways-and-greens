@@ -7,6 +7,7 @@ import com.fore.game.application.dto.ActionResultResponse;
 import com.fore.game.application.dto.GameStateDtoMapper;
 import com.fore.game.application.dto.PlayerActionRequest;
 import com.fore.game.application.dto.PlayerActionRequest.ActionType;
+import com.fore.game.application.npc.NpcTurnService;
 import com.fore.game.application.ports.outbound.GameEventRepository;
 import com.fore.game.application.ports.outbound.GameRepository;
 import com.fore.game.domain.events.GameEvent;
@@ -18,6 +19,8 @@ import com.fore.game.domain.model.TradeOffer;
 import com.fore.game.domain.model.enums.GameStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,7 @@ public class ExecuteActionUseCase {
     private final GameEventRepository eventRepository;
     private final GameStateDtoMapper dtoMapper;
     private final GameEventPublisher eventPublisher;
+    private final ApplicationContext applicationContext; // For async self-invocation
 
     @Transactional
     public ActionResultResponse execute(UUID gameId, PlayerActionRequest request) {
@@ -78,7 +82,35 @@ public class ExecuteActionUseCase {
         UpdateType updateType = mapActionToUpdateType(request.getActionType(), savedGame);
         eventPublisher.publishActionResult(gameId, request.getPlayerId(), updateType, response);
 
+        // Trigger NPC turn if needed (async to not block response)
+        if (savedGame.getStatus() == GameStatus.IN_PROGRESS && savedGame.isCurrentPlayerNpc()) {
+            triggerNpcTurnAsync(gameId);
+        }
+
         return response;
+    }
+
+    /**
+     * Trigger NPC turn asynchronously.
+     * Uses self-invocation via ApplicationContext to ensure @Async works.
+     */
+    private void triggerNpcTurnAsync(UUID gameId) {
+        // Get the proxy to enable @Async
+        ExecuteActionUseCase self = applicationContext.getBean(ExecuteActionUseCase.class);
+        self.executeNpcTurn(gameId);
+    }
+
+    @Async
+    public void executeNpcTurn(UUID gameId) {
+        try {
+            // Small delay to let the transaction commit
+            Thread.sleep(200);
+            
+            NpcTurnService npcTurnService = applicationContext.getBean(NpcTurnService.class);
+            npcTurnService.executeNpcTurnIfNeeded(gameId);
+        } catch (Exception e) {
+            log.error("Error executing NPC turn for game {}: {}", gameId, e.getMessage(), e);
+        }
     }
 
     private DiceRoll executeAction(GameSession game, PlayerActionRequest request) {
@@ -147,7 +179,6 @@ public class ExecuteActionUseCase {
     }
 
     private UpdateType mapActionToUpdateType(ActionType actionType, GameSession game) {
-        // Check for game end
         if (game.getStatus() == GameStatus.COMPLETED) {
             return UpdateType.GAME_ENDED;
         }
