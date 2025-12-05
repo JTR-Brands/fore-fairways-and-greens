@@ -1,0 +1,199 @@
+.game-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.board-inner {
+  position: relative;
+  width: 630px;
+  height: 630px;
+  background: linear-gradient(135deg, #2d5a27 0%, #1a4d1a 100%);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.tile {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  background: #f5f5dc;
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.tile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.tile.selected {
+  box-shadow: 0 0 0 3px #ffd700, 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 11;
+}
+
+/* Corner tiles */
+.tile-clubhouse_hq,
+.tile-sand_trap,
+.tile-members_lounge {
+  background: linear-gradient(135deg, #f0f0f0 0%, #d0d0d0 100%);
+}
+
+/* Special tiles */
+.tile-pro_shop {
+  background: linear-gradient(135deg, #e6f3ff 0%, #b3d9ff 100%);
+}
+
+.tile-water_hazard {
+  background: linear-gradient(135deg, #e6f7ff 0%, #87ceeb 100%);
+}
+
+.tile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 4px;
+  text-align: center;
+}
+
+.property-color-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+}
+
+.tile-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.tile-name {
+  font-size: 9px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.1;
+  max-width: 80px;
+  word-wrap: break-word;
+}
+
+.tile-price {
+  font-size: 10px;
+  color: #2e7d32;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.ownership-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+}
+
+.improvement {
+  font-size: 8px;
+}
+
+/* Player tokens */
+.player-tokens {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.player-token {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.player-token.current {
+  animation: pulse 1.5s infinite;
+  border-color: #ffd700;
+}
+
+.player-token.npc {
+  opacity: 0.9;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Center area */
+.board-center {
+  position: absolute;
+  top: 90px;
+  left: 90px;
+  right: 90px;
+  bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3d7a35 0%, #2d5a27 100%);
+  border-radius: 8px;
+}
+
+.game-title {
+  font-size: 48px;
+  font-weight: 800;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  letter-spacing: 8px;
+}
+
+.game-subtitle {
+  font-size: 16px;
+  color: #fff;
+  margin: 8px 0 0;
+  font-style: italic;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .board-inner {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    max-width: 630px;
+  }
+
+  .tile {
+    width: calc(100% / 7);
+    height: calc(100% / 7);
+  }
+
+  .game-title {
+    font-size: 32px;
+  }
+
+  .game-subtitle {
+    font-size: 12px;
+  }
+}

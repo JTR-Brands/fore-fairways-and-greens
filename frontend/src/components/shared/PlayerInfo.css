@@ -1,0 +1,197 @@
+.player-info {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+}
+
+.player-info.current-turn {
+  box-shadow: 0 0 0 3px #2ecc71, 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.player-info.is-you {
+  background: linear-gradient(135deg, #fff 0%, #f0f7ff 100%);
+}
+
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.player-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.player-name-section {
+  flex: 1;
+}
+
+.player-name {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.you-badge {
+  background: #3498db;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.npc-badge {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.turn-badge {
+  background: #2ecc71;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  text-align: center;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-value.cash {
+  color: #2ecc71;
+}
+
+.properties-section {
+  border-top: 1px solid #eee;
+  padding-top: 12px;
+}
+
+.properties-section h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.property-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.property-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.group-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.group-properties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.property-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.property-chip-name {
+  color: #333;
+}
+
+.improvement-badge {
+  font-size: 10px;
+}
+
+.status-alert {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-alert.sand-trap {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-alert.bankrupt {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.doubles-streak {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #f39c12;
+  font-weight: 600;
+}

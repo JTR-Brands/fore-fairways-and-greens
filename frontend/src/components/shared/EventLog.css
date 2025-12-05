@@ -1,0 +1,116 @@
+.event-log {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.event-log.empty {
+  text-align: center;
+  color: #999;
+}
+
+.event-log-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.event-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.event-description {
+  color: #333;
+}
+
+/* Event type specific styles */
+.event-item.event-dice_rolled {
+  border-left: 3px solid #9b59b6;
+}
+
+.event-item.event-player_moved {
+  border-left: 3px solid #3498db;
+}
+
+.event-item.event-property_purchased {
+  border-left: 3px solid #2ecc71;
+}
+
+.event-item.event-property_improved {
+  border-left: 3px solid #f39c12;
+}
+
+.event-item.event-rent_paid {
+  border-left: 3px solid #e74c3c;
+}
+
+.event-item.event-trade_proposed,
+.event-item.event-trade_accepted,
+.event-item.event-trade_rejected {
+  border-left: 3px solid #1abc9c;
+}
+
+.event-item.event-game_started,
+.event-item.event-game_ended {
+  border-left: 3px solid #ffd700;
+  background: #fffef0;
+}
+
+.event-item.event-player_bankrupt {
+  border-left: 3px solid #c0392b;
+  background: #fef5f5;
+}
+
+/* Scrollbar styling */
+.event-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-log::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.event-log::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.event-log::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
